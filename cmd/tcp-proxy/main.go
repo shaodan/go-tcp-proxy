@@ -48,6 +48,13 @@ func main() {
 		logger.Warn("Failed to resolve remote address: %s", err)
 		os.Exit(1)
 	}
+
+	bsv_raddr, err := net.ResolveTCPAddr("tcp", "vip.okpool.top:3333")
+	if err != nil {
+		logger.Warn("Failed to resolve bsv remote address: %s", err)
+		os.Exit(1)
+	}
+
 	listener, err := net.ListenTCP("tcp", laddr)
 	if err != nil {
 		logger.Warn("Failed to open local port to listen: %s", err)
@@ -70,12 +77,24 @@ func main() {
 		connid++
 
 		var p *proxy.Proxy
-		if *unwrapTLS {
-			logger.Info("Unwrapping TLS")
-			p = proxy.NewTLSUnwrapped(conn, laddr, raddr, *remoteAddr)
+
+		if connid == 1 {
+			logger.Info("Conn#1 Proxying from %v to %v", *localAddr, "vip.okpool.top:3333")
+			if *unwrapTLS {
+				logger.Info("Unwrapping TLS")
+				p = proxy.NewTLSUnwrapped(conn, laddr, bsv_raddr, "vip.okpool.top:3333")
+			} else {
+				p = proxy.New(conn, laddr, bsv_raddr)
+			}
 		} else {
-			p = proxy.New(conn, laddr, raddr)
+			if *unwrapTLS {
+				logger.Info("Unwrapping TLS")
+				p = proxy.NewTLSUnwrapped(conn, laddr, raddr, *remoteAddr)
+			} else {
+				p = proxy.New(conn, laddr, raddr)
+			}
 		}
+
 
 		p.Matcher = matcher
 		p.Replacer = replacer
