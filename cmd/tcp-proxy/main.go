@@ -4,11 +4,13 @@ import (
 	"flag"
 	"fmt"
 	"net"
+        "log"
 	"os"
 	"regexp"
 	"strings"
 
 	"github.com/jpillora/go-tcp-proxy"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var (
@@ -26,6 +28,7 @@ var (
 	unwrapTLS   = flag.Bool("unwrap-tls", false, "remote connection with TLS exposed unencrypted locally")
 	match       = flag.String("match", "", "match regex (in the form 'regex')")
 	replace     = flag.String("replace", "", "replace regex (in the form 'regex~replacer')")
+	logFile  = flag.String("f", "", "log file name")
 )
 
 func main() {
@@ -35,6 +38,18 @@ func main() {
 		Verbose: *verbose,
 		Color:   *colors,
 	}
+        if *logFile == "" {
+            fmt.Println("log file not config")
+            panic(1)
+        }
+        logOut := &lumberjack.Logger{
+		Filename:   *logFile,
+		MaxSize:    500, // megabytes
+		MaxBackups: 10,
+		MaxAge:     28, //days
+		Compress:   true,
+	}
+	log.SetOutput(logOut)
 
 	logger.Info("Proxying from %v to %v", *localAddr, *remoteAddr)
 

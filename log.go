@@ -2,8 +2,7 @@ package proxy
 
 import (
 	"fmt"
-
-	"github.com/mgutz/ansi"
+	"log"
 )
 
 // Logger - Interface to pass into Proxy for it to log messages
@@ -64,8 +63,5 @@ func (l ColorLogger) Warn(f string, args ...interface{}) {
 }
 
 func (l ColorLogger) output(color, f string, args ...interface{}) {
-	if l.Color && color != "" {
-		f = ansi.Color(f, color)
-	}
-	fmt.Printf(fmt.Sprintf("%s%s\n", l.Prefix, f), args...)
+	log.Printf(fmt.Sprintf("%s%s\n", l.Prefix, f), args...)
 }
